@@ -4,6 +4,8 @@ A GNOME Shell extension that removes the two-space margin from text you copy in 
 
 When every non-blank line of a copy starts with two spaces, as with output copied from Claude Code, the extension removes those two spaces from each line in the clipboard. If any non-blank line does not start with two spaces, the copy is left unchanged. A Claude Code reply bullet (`● ` or `⏺ `) at the start of the first line counts as that line's two spaces, so a copy that starts at the bullet is cleaned too (this can be turned off, see [Settings](#settings)).
 
+In a Claude Code tab, recognized by ` — claude` in the window title (Ptyxis adds the tab's running command, as in `✳ <summary> — claude --resume <id>`), the first line is left out of the check, so a selection that starts partway through a line is cleaned too. Every line of Claude Code output carries the margin, so this only removes the margin. Elsewhere the first line must start with two spaces as well, because code such as `def f():` followed by a body indented two spaces looks the same and must not lose its indentation.
+
 The terminal sets the clipboard first; GNOME Shell then reports the change and the extension replaces the text a few milliseconds later.
 
 Requires GNOME Shell 45 to 50. Tested on Fedora 44 (GNOME Shell 50, Wayland) with Ptyxis.
@@ -57,7 +59,7 @@ journalctl -f -o cat /usr/bin/gnome-shell
 
 ## Settings
 
-Both settings are read on every copy, so a change applies to the next copy without logging out.
+All settings are read on every copy, so a change applies to the next copy without logging out.
 
 ```bash
 # Terminals the extension acts in. Writing the key replaces the whole list.
@@ -68,9 +70,18 @@ dconf reset /org/gnome/shell/extensions/terminal-strip-indent/terminals    # bac
 # Treat a Claude Code bullet on the first line as its two spaces: 'enabled' (default) or 'disabled'.
 dconf write /org/gnome/shell/extensions/terminal-strip-indent/bullet "'disabled'"
 dconf reset /org/gnome/shell/extensions/terminal-strip-indent/bullet
+
+# In a Claude Code tab, leave the first line out of the check: 'claude' (default) or 'strict' (never).
+dconf write /org/gnome/shell/extensions/terminal-strip-indent/first-line "'strict'"
+dconf reset /org/gnome/shell/extensions/terminal-strip-indent/first-line
 ```
 
-The inner single quotes are required; dconf values are written as GVariant text. `dconf read` printing nothing means the default is in effect. A `bullet` value other than `enabled` or `disabled` is ignored and the default is used. To find a program's window class, open Looking Glass (Alt+F2, `lg`) and look at the Windows tab.
+The inner single quotes are required; dconf values are written as GVariant text. `dconf read` printing nothing means the default is in effect. A value that is not one of a key's choices is ignored and the default is used. 
+To find a program's window class and title, run `journalctl -f -o cat /usr/bin/gnome-shell` in a terminal, open Looking Glass (Alt+F2, type `lg`, Enter) and run this in its Evaluator tab; each window is printed to the log as `class | title`:
+
+```js
+global.get_window_actors().map(a => a.meta_window).forEach(w => console.log(w.get_wm_class() + ' | ' + w.get_title()))
+```
 
 ## Testing
 

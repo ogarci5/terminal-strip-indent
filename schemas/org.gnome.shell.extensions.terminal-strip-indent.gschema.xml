@@ -10,6 +10,14 @@
       <default>'enabled'</default>
       <summary>Treat a Claude Code reply bullet on the first line as its two spaces</summary>
     </key>
+    <key name="first-line" type="s">
+      <choices>
+        <choice value="claude"/>
+        <choice value="strict"/>
+      </choices>
+      <default>'claude'</default>
+      <summary>In a Claude Code tab, leave the first line out of the two-space check</summary>
+    </key>
     <key name="terminals" type="as">
       <default>['org.gnome.Ptyxis', 'org.gnome.Ptyxis.Devel', 'org.gnome.Terminal', 'org.gnome.Console', 'kitty', 'Alacritty', 'org.wezfurlong.wezterm', 'com.mitchellh.ghostty', 'foot']</default>
       <summary>Window classes whose copies are rewritten</summary>

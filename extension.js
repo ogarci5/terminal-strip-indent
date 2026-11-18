@@ -2,7 +2,7 @@ import Meta from 'gi://Meta';
 import St from 'gi://St';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-import {readOptions, stripIndent} from './strip.js';
+import {isClaudeCode, readOptions, stripIndent} from './strip.js';
 
 export default class TerminalStripIndent extends Extension {
     enable() {
@@ -14,15 +14,16 @@ export default class TerminalStripIndent extends Extension {
             if (type !== Meta.SelectionType.SELECTION_CLIPBOARD)
                 return;
             // Read on every copy so a dconf write applies to the next copy.
-            const {terminals, bullet} = readOptions(this._settings);
-            const wmClass = global.display.focus_window?.get_wm_class();
-            if (!terminals.has(wmClass))
+            const {terminals, bullet, claudeFirstLine} = readOptions(this._settings);
+            const window = global.display.focus_window;
+            if (!terminals.has(window?.get_wm_class()))
                 return;
+            const skipFirstLine = claudeFirstLine && isClaudeCode(window.get_title());
             this._clipboard.get_text(St.ClipboardType.CLIPBOARD, (_cb, text) => {
                 // Our own write fires owner-changed again; skip it so "    x" is not stripped twice.
                 if (!text || text === this._lastSet)
                     return;
-                const stripped = stripIndent(text, bullet);
+                const stripped = stripIndent(text, {bullet, skipFirstLine});
                 if (stripped === null)
                     return;
                 this._lastSet = stripped;
