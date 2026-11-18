@@ -2,7 +2,7 @@
 
 A GNOME Shell extension that removes the two-space margin from text you copy in a terminal.
 
-When every non-blank line of a copy starts with two spaces, as with output copied from Claude Code, the extension removes those two spaces from each line in the clipboard. If any non-blank line does not start with two spaces, the copy is left unchanged. A Claude Code reply bullet (`● ` or `⏺ `) at the start of the first line counts as that line's two spaces, so a copy that starts at the bullet is cleaned too.
+When every non-blank line of a copy starts with two spaces, as with output copied from Claude Code, the extension removes those two spaces from each line in the clipboard. If any non-blank line does not start with two spaces, the copy is left unchanged. A Claude Code reply bullet (`● ` or `⏺ `) at the start of the first line counts as that line's two spaces, so a copy that starts at the bullet is cleaned too (this can be turned off, see [Settings](#settings)).
 
 The terminal sets the clipboard first; GNOME Shell then reports the change and the extension replaces the text a few milliseconds later.
 
@@ -32,7 +32,7 @@ gnome-extensions info terminal-strip-indent@local        # Enabled: Yes, State: 
 
 ## What it affects
 
-The extension only acts when the focused window is one of these terminals (`TERMINALS` in `extension.js`):
+By default the extension only acts when the focused window is one of these terminals (the `terminals` setting):
 
 | Terminal | Window class |
 |---|---|
@@ -47,15 +47,30 @@ The extension only acts when the focused window is one of these terminals (`TERM
 
 - **Browsers and IDEs are not affected.** Copies from Firefox, Chrome or VS Code (including its integrated terminal, which is part of the VS Code window) are left as they are.
 - **Only the clipboard is changed**: Ctrl+Shift+C, right-click Copy, or a program in the terminal setting the clipboard. Select-to-copy and middle-click paste use the primary selection, which is never touched.
-- **Known side effect:** `systemctl status` output starts with `● ` and its other lines are indented, so a copy of it loses the bullet and two spaces per line.
-
-To cover another program, find its window class in Looking Glass (Alt+F2, `lg`, Windows tab), add it to `TERMINALS`, then reinstall and log out and back in.
+- **Known side effect:** `systemctl status` output starts with `● ` and its other lines are indented, so a copy of it loses the bullet and two spaces per line. Setting `bullet` to `disabled` leaves it unchanged.
 
 If copies are not being stripped, check the shell log while copying:
 
 ```bash
 journalctl -f -o cat /usr/bin/gnome-shell
 ```
+
+## Settings
+
+Both settings are read on every copy, so a change applies to the next copy without logging out.
+
+```bash
+# Terminals the extension acts in. Writing the key replaces the whole list.
+dconf write /org/gnome/shell/extensions/terminal-strip-indent/terminals "['org.gnome.Ptyxis', 'kitty', 'code']"
+dconf read /org/gnome/shell/extensions/terminal-strip-indent/terminals
+dconf reset /org/gnome/shell/extensions/terminal-strip-indent/terminals    # back to the default list
+
+# Treat a Claude Code bullet on the first line as its two spaces: 'enabled' (default) or 'disabled'.
+dconf write /org/gnome/shell/extensions/terminal-strip-indent/bullet "'disabled'"
+dconf reset /org/gnome/shell/extensions/terminal-strip-indent/bullet
+```
+
+The inner single quotes are required; dconf values are written as GVariant text. `dconf read` printing nothing means the default is in effect. A `bullet` value other than `enabled` or `disabled` is ignored and the default is used. To find a program's window class, open Looking Glass (Alt+F2, `lg`) and look at the Windows tab.
 
 ## Testing
 

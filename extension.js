@@ -2,37 +2,27 @@ import Meta from 'gi://Meta';
 import St from 'gi://St';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-import {stripIndent} from './strip.js';
-
-// Window classes (Wayland app ids) whose copies are rewritten.
-const TERMINALS = new Set([
-    'org.gnome.Ptyxis',
-    'org.gnome.Ptyxis.Devel',
-    'org.gnome.Terminal',
-    'org.gnome.Console',
-    'kitty',
-    'Alacritty',
-    'org.wezfurlong.wezterm',
-    'com.mitchellh.ghostty',
-    'foot',
-]);
+import {readOptions, stripIndent} from './strip.js';
 
 export default class TerminalStripIndent extends Extension {
     enable() {
+        this._settings = this.getSettings();
         this._clipboard = St.Clipboard.get_default();
         this._selection = global.display.get_selection();
         this._lastSet = null;
         this._ownerChangedId = this._selection.connect('owner-changed', (_sel, type) => {
             if (type !== Meta.SelectionType.SELECTION_CLIPBOARD)
                 return;
+            // Read on every copy so a dconf write applies to the next copy.
+            const {terminals, bullet} = readOptions(this._settings);
             const wmClass = global.display.focus_window?.get_wm_class();
-            if (!TERMINALS.has(wmClass))
+            if (!terminals.has(wmClass))
                 return;
             this._clipboard.get_text(St.ClipboardType.CLIPBOARD, (_cb, text) => {
                 // Our own write fires owner-changed again; skip it so "    x" is not stripped twice.
                 if (!text || text === this._lastSet)
                     return;
-                const stripped = stripIndent(text);
+                const stripped = stripIndent(text, bullet);
                 if (stripped === null)
                     return;
                 this._lastSet = stripped;
@@ -46,6 +36,7 @@ export default class TerminalStripIndent extends Extension {
         this._ownerChangedId = null;
         this._selection = null;
         this._clipboard = null;
+        this._settings = null;
         this._lastSet = null;
     }
 }

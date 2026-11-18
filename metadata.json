@@ -2,5 +2,6 @@
   "uuid": "terminal-strip-indent@local",
   "name": "Terminal Strip Indent",
   "description": "When text copied from a terminal has every non-blank line starting with two spaces, remove those two spaces from the clipboard.",
+  "settings-schema": "org.gnome.shell.extensions.terminal-strip-indent",
   "shell-version": ["45", "46", "47", "48", "49", "50"]
 }
